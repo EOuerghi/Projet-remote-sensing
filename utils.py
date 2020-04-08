@@ -514,8 +514,23 @@ def utm_bounding_box_from_lonlat_aoi(aoi):
     lons, lats  = np.array(aoi['coordinates'][0]).T
     east, north, espg = lonlat_to_utm(lons, lats)
     pts = list(zip(east, north))
+
     emin, nmin, deltae, deltan = bounding_box2D(pts)
-    return emin, emin+deltae, nmin, nmin+deltan
+    return emin, emin+deltae, nmin, nmin+deltan, espg
+
+def lonlat_aoi_from_utm_bounding_box(e_min, e_max, n_min, n_max, espg):
+	corner_1 = utm_to_lonlat(e_min, n_min, espg)
+	corner_2 = utm_to_lonlat(e_max, n_min, espg)
+	corner_3 = utm_to_lonlat(e_max, n_max, espg)
+	corner_4 = utm_to_lonlat(e_min, n_max, espg)
+	lonmin, latmin, deltalon, deltalat = bounding_box2D([corner_1, corner_2, corner_3, corner_4])
+	lonmin = float(lonmin)
+	latmin = float(latmin)
+	aoi = {'coordinates': [[corner_1, corner_2, corner_3, corner_4]], 'type': 'Polygon'}
+	aoi = {'coordinates': [[[lonmin,latmin], [lonmin + deltalon, latmin], [lonmin + deltalon, latmin + deltalat], 
+	[lonmin, latmin + deltalat], [lonmin,latmin]]], 'type': 'Polygon'}
+    
+	return aoi
 
 
 def simple_equalization_8bit(im, percentiles=5):
